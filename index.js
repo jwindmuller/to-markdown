@@ -41,6 +41,34 @@ module.exports = function (input) {
   // Replace nodes as necessary.
   for (var i = nodes.length - 1; i >= 0; i--) {
     var node = nodes[i];
+
+    var parentNode = node.parentNode;
+    if (node.tagName == 'A' && node.href.indexOf('#fn') >= 0) {
+      var isFootNote = node.href.indexOf('#fnref:') > 0;
+      var refName = node.href.replace('about:blank', '').replace('#fnref:', '').replace('#fn:', '');
+
+      var extra = isFootNote ? ': ' : '';
+      parentNode.replaceChild(doc.createTextNode(''), node);
+      parentNode._childNodes.unshift(doc.createTextNode('[^' + refName + ']' + extra));
+      continue;
+    }
+
+    if (node.tagName == 'LI' && node.innerHTML.trim().indexOf('[^') === 0) {
+      if (parentNode !== null && parentNode.previousSibling !== null && parentNode.previousSibling.tagName == 'HR') {
+        parentNode.previousSibling.parentNode.replaceChild(doc.createTextNode(''), parentNode.previousSibling);
+      }
+      node.parentNode.replaceChild(doc.createTextNode(node.innerHTML.trim()) , node);
+      continue;
+    }
+
+
+    if (node.tagName == 'SUP' && node.innerHTML.trim().indexOf('[^') === 0) {
+      node.parentNode.replaceChild(doc.createTextNode(node.innerHTML), node);
+      continue;
+    }
+
+    if (node.parentNode == null) continue;
+
     var replacement = replacementForNode(node, doc);
     if (replacement) { node.parentNode.replaceChild(replacement, node); }
   }
